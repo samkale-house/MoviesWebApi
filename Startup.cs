@@ -24,9 +24,22 @@ namespace MoviesWebApi
 
         public IConfiguration Configuration { get; }
 
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //allow specific clients to call webapi
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                builder =>
+                {
+                    builder.WithOrigins("https://localhost:44363",
+                                        "http://www.contoso.com")
+                                       .AllowAnyHeader()
+                                       .AllowAnyMethod(); 
+                });
+            });
             services.AddControllers();
             services.AddDbContext<MoviesDBContext>(options =>
            options.UseSqlServer(Configuration.GetConnectionString("MoviesDBContext")));
@@ -39,8 +52,16 @@ namespace MoviesWebApi
             {
                 app.UseDeveloperExceptionPage();
             }
+            
+            //enable cors
+            app.UseCors(MyAllowSpecificOrigins);
+
+            //added for index.html
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
+
 
             app.UseRouting();
 
